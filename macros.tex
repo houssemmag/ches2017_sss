@@ -1,0 +1,43 @@
+\newtheorem{assumption}{Assumption}
+\newenvironment{notation}{\begin{trivlist}\item[] {\em Notation.}}%
+{\samepage \end{trivlist}}
+
+% Probability definitions
+
+\newcommand\myP[1]{\ensuremath\mathsf{P}\lbrack #1 \rbrack}     % The probability
+\newcommand\myE[1]{\ensuremath\mathsf{E}\lbrack #1 \rbrack}     % The expectation
+\newcommand\myV[1]{\ensuremath\mathsf{Var}\lbrack #1 \rbrack}   % The variance
+\newcommand\mycov[2]{\ensuremath\mathsf{Cov}\lbrack #1;#2 \rbrack}   % The covariance
+\newcommand\myI[2]{\ensuremath\mathsf{I}\lbrack #1;#2 \rbrack}  % The mutual information
+\newcommand\myH[1]{\ensuremath\mathsf{H}\lbrack #1 \rbrack}     % The entropy
+\newcommand\todo[1]{\textcolor{red}{TODO: #1}}
+\newcommand{\codel}{$(3,6)\text{-code}$ }
+
+% Finite Fields definitions
+
+\def \GF {\mathrm{GF}}
+\def \GFn {\GF(2^n)}
+\def \GFm {\GF(2^m)}
+\def \nbShares {n}
+\def \order {d}
+\newcommand{\pubEltNoIndex}[1][i]{\alpha}
+\newcommand{\pubElt}[1][i]{\alpha_{#1}}
+\newcommand{\pubEltStar}{\alpha^{\star}}
+\newcommand{\polyCoef}[1][i]{u_{#1}}
+\newcommand{\RS}[1][]{\mathrm{RS}(#1)}
+\def \Field {\mathbb{K}}
+\def \FField {\mathbb{F}}
+\def \pubSet{\mathcal{S}}
+\def \myTrace {\mathrm{tr}_{\Field/\FField}}
+
+% Editorial definitions
+
+\def\etal{\textit{et al.} }
+\newcommand {\ie}{{\em i.e.} }
+\def\eg{\textit{e.g.} }
+\def\resp{{\em resp.} }
+\def\myth{$^\text{th}$}
+
+% Comments
+
+\def\comEP#1{\textcolor{RoyalPurple}{{\bf EP: #1}}}

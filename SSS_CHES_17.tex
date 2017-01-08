@@ -15,19 +15,12 @@
 \usepackage{colortbl} % For \cellcolor
 \usepackage{algorithm}
 \usepackage{algpseudocode} 
-%\usepackage{alg}
-\newtheorem{assumption}{Assumption}
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 \usepackage{moreverb}
-\newcommand\myP[1]{\ensuremath\mathsf{P}\lbrack #1 \rbrack}     % The probability
-\newcommand\myE[1]{\ensuremath\mathsf{E}\lbrack #1 \rbrack}     % The expectation
-\newcommand\myV[1]{\ensuremath\mathsf{Var}\lbrack #1 \rbrack}   % The variance
-\newcommand\mycov[2]{\ensuremath\mathsf{Cov}\lbrack #1;#2 \rbrack}   % The covariance
-\newcommand\myI[2]{\ensuremath\mathsf{I}\lbrack #1;#2 \rbrack}  % The mutual information
-\newcommand\myH[1]{\ensuremath\mathsf{H}\lbrack #1 \rbrack}     % The entropy
-\newcommand\todo[1]{\textcolor{red}{TODO: #1}}
-\newcommand{\codel}{$(3,6)\text{-code}$ }
+\usepackage[dvipsnames,table]{xcolor}
+
+\include{macros}
 
 \title{Enhancement of Shamir's Secret Sharing Schemes against Side-Channel Attacks}
 
@@ -59,7 +52,68 @@
 \subsubsection{Side-Channel Countermeasures.} 
  \todo{}
 \subsubsection{Shamir's Secret Sharing based Countermeasures.}
- \todo{} 
+
+In a seminal paper\,\cite{Sha79}, Shamir proposed to split a secret $A\in \GFn$ into $\nbShares$ shares such that
+no tuple of shares with cardinality lower than a so-called {\em threshold} $\order<\nbShares$ depends on $A$. Shamir's
+protocol consists in associating $A$ with a random polynomial $P_A(X)\doteq A + \sum_{i=1}^{\order}\polyCoef X^i$ of degree lower than $\order$ and with constant term $A=P_A(0)$. Then, the polynomial $P_A(X)$ is evaluated in $\nbShares$ distinct public non-zero elements $\pubElt[0], \ldots, \pubElt[n-1]$ in $\GFn$ to define a so-called {\em $(\nbShares,\order)$-sharing} $(A_0,A_1,\cdots,A_{\nbShares-1})$ of $A$ such that $(A_i)_{i\leqslant \nbShares}=(P_A(\alpha_i))_{i\leqslant \nbShares}$. To re-construct $A$ from its sharing, polynomial interpolation is first applied to re-construct the polynomial from its $\nbShares$ evaluations $A_i$ and then, it is evaluated in $0$. Actually, using Lagrange's
+interpolation formula, the two steps can be combined in a single one thanks to the equality $ A=\sum_{i=0}^{\nbShares-1} A_i \cdot \beta_i\enspace$,  where the (public) constants $\beta_i$ are defined as $\beta_i:=\prod_{k=0,k\neq i}^{\nbShares-1} \frac{\alpha_k}{\alpha_i+\alpha_k}$. As initially observed by McEliece and Sarwate in \cite{MS81}, the sharing of $A$ described above may be viewed as an {\em encoding} with a Reed-Solomon code of parameters $[\nbShares + 1,\order + 1]$:
+$$
+(A,A_1,\cdots,A_{\nbShares}) = (A,\polyCoef[1],\cdots,\polyCoef[\order])\times 
+\left(\begin{matrix}
+1 & 1 & \hdots & 1 \\
+0 & \pubElt[1] & \hdots & \pubElt[\nbShares] \\
+0 & \pubElt[1]^2 & \hdots & \pubElt[\nbShares]^2 \\
+\vdots & \vdots & \hdots & \vdots \\
+0 & \pubElt[1]^{\order} & \hdots & \pubElt[\nbShares]^{\order} 
+\end{matrix}
+\right)
+$$
+The reconstruction of $A$ then corresponds to a simple {\em decoding}.
+\vspace{3mm}
+
+To define a $\order$\myth-order masking scheme for a block cipher
+implementation where each intermediate result is split with Shamir's
+technique, one must specify a secure method for the processing of field
+multiplications over $\GFn$. Most of (if not all) existing protocols start from a multiplication scheme introduced by
+Ben-Or \etal in the context of the Multy-Party Computation Theory
+\cite{BGW88}. For this protocol to work, the number of shares $\nbShares$ per variable must be at least $2\order+1$ and for $\nbShares=2\order+1$, it is proved that it satisfies a security property encompassing the $\order$\myth-order SCA security \cite{PR11}. We give hereafter the adaptation of
+\cite{BGW88} in the 
+SCA context as proposed in \cite{PR11,RP12}\footnote{The protocol is 
+an improved version of the protocol originally proposed by Ben-Or \etal \cite{BGW88},
+due to Gennaro \etal in \cite{GRR98}.}.
+
+
+\begin{algorithm}
+\caption{Secure Multiplication For Shamir's Secret Sharing}
+\label{alg:secmult}
+\begin{algorithmic}[1]
+\Require {two integers $\nbShares$ and $\order$ such that $n\geq 2d+1$, the  $(\nbShares,\order)$-sharings $(A_i)_i=(P_A(\pubElt))_i$ and $(B_i)_i=(P_{B}(\pubElt))_i$ of $A$ and $B$ respectively.}
+\Require   {the $\nbShares$ distinct points $\pubElt$, the interpolation values $(\beta_0,\cdots,\beta_{\nbShares-1})$}
+\Ensure     {the $(\nbShares,\order)$-sharing $(P_{C}(\alpha_i))_i$ of $C=A\cdot B$. }
+\For{$i=1$ \textbf{to} $\nbShares$}
+\State $W_i \leftarrow P_A(\pubElt)\cdot P_{B}(\pubElt)$
+
+\Comment{Compute a sharing $(Q_i(\alpha_j))_{j\leq d}$ of $W_i$ with $Q_i (X) = W_i + \sum_{j=1}^{\order} a_j\cdot X^j$}
+\For{$j=1$ \textbf{to} $\order$}
+\State $a_j \leftarrow \texttt{rand}(\GFn)$
+\EndFor
+\For{$j=1$ \textbf{to} $\nbShares$}
+\State $Q_i(\pubElt[j]) \leftarrow W_i +
+      \sum_{k=1}^{\order} a_k\cdot \pubElt[j]^k$ \label{step:reshare} 
+\EndFor  	
+\EndFor
+   	
+\Comment{Compute the share $C_i = P_{C}(\pubElt)$ for $C=A \cdot B$}
+\For{$i=1$ \textbf{to} $\nbShares$}
+\State $C_i \leftarrow \sum_{j=1}^{\nbShares} Q_j(\pubElt) \cdot \beta_j$
+\EndFor
+\Return $(C_i)_i$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+The completeness of Algorithm \ref{alg:secmult} is discussed in \cite{BGW88}. Its $\order$\myth-order SCA security can be straightforwardly deduced from the proof given by Ben-Or \etal in \cite{BGW88} in the secure multi-party computation context. Eventually, for $\nbShares=2\order+1$ (which is the parameter choice which optimizes the security/efficiency overhead), the complexity of Algorithm \ref{alg:secmult} in terms of additions and multiplications is ${\cal O}(\order^3)$.
 \subsubsection{Our Contribution.}
  \todo{}
 \subsubsection{Paper Outline.}
@@ -67,7 +121,54 @@
 
 \section{Exact Repair Problem}
 \subsection{Preliminaries}
- \todo{}
+
+A {\em linear code} $\mathcal{C}$ of length $\nbShares$ and dimension $k$ over a finite field $\Field$ is a $k$-dimensional subspace of $\Field^{\nbShares}$. It is denoted by $\mathcal{C}[n,k]$. A particular linear code is the {\em Reed-Solomon Code} whose definition is recalled hereafter.
+
+\begin{definition}[Reed-Solomon Code]
+The Reed-Solomon code $\RS[\pubSet, \order + 1]\subseteq \Field^{\nbShares}$ of dimension $\order + 1$ over a finite field $\Field$ and with evaluation subset $\pubSet = \{\pubElt[1],\pubElt[2],\cdots,\pubElt[\nbShares]\}$ of $\Field$ is the subspace:
+$$\RS[\pubSet,\order + 1] = \{(P(\pubElt[1]),P(\pubElt[2]),\cdots,P(\pubElt[\nbShares])); P(X) \in \Field[X] \text{ and } \deg(P) \leqslant \order\} \enspace .$$
+\end{definition}
+
+Reed-Solomon codes are {\em Maximum Distance Separable} (MDS) codes, which means that any $\order + 1$ symbols (that is, evaluations of a polynomial $P(X)\in \RS[\pubSet,\order+1]$) can be used to recover the entire codeword (that is,
+$P(X)$ itself).
+\vspace{3mm}
+
+Let us assume that a file, consisting of $\order + 1$ blocks, is encoded into $\nbShares$ nodes. {\em Exact Repairing codes} have been originally introduced to recover the contents of an erased node by downloading some information from the remaining nodes. In the language of an $\RS[\pubSet,\order+1]$ code as above, the file is a polynomial $P(X)\in \Field[X]$ with $\deg(P(X)) \leqslant \order$ and each node is associated with an evaluation point $\pubElt \in \pubSet$ and stores $P(\pubElt)$. For an arbitrary $\pubEltStar\in \pubSet$ (corresponding to an erased node), the goal is to recover $P(\pubEltStar)$ given some information from the other nodes. Since the code is MDS, its is straightforward to do it by choosing any subset of $\pubSet$ with cardinality $\order + 1$ and by asking the evaluations $P(\pubElt)$ to the corresponding nodes. This means that, for any $\pubEltStar$, the evaluation $P(\pubEltStar)$ can at least be recovered by asking $\log_2(\Field)$ bits of information (corresponding to $P(\pubElt)$) to $\order +1$ nodes. Linear repairing codes aim to define a repairing scheme such that, for any $\pubEltStar$, the evaluation $P(\pubEltStar)$ can be recovered with strictly less than $(\order + 1)\times \log_2(\Field)$ bits of information, by allowing each node to return any $\FField$-linear function of its content, with $\FField$ being a subfield of $\Field$. The $\FField$-linear functions from $\FField$ to $\Field$ may all be defined from the so-called {\em field trace} of $\Field$ over $\FField$. We recall the definition of the field trace hereafter:
+
+\begin{definition}[Field Trace]
+Let $p$ and $r$ be two integers and let $q=p^r$. Let $\Field=\GF(q^t)$ be a degree-$t$ finite field extension of a $\FField=\GF(q)$. The {\em field trace} $\myTrace$ is defined for every $\beta \in \Field$ as:
+\begin{equation}\label{equ:trace}
+\myTrace(\beta) = \beta + \beta^q + \beta^{q^2} + \cdots + \beta^{q^{t-1}} \enspace .
+\end{equation}
+\end{definition}
+
+In a linear repair scheme, the node corresponding to a public point $\pubElt$ returns zero or more elements of $\FField$ of the form $\myTrace(\gamma P(\pubElt))$ for some field elements $\gamma \in \Field$. A linear exact repair scheme can then be described by the field elements $\gamma$ used by all the nodes, along with a (linear) repair algorithm. A precise definition in the context of Reed-Solomon codes is given below:
+
+\begin{definition}[Linear Exact Repair Scheme (LERS)]\label{def:LERS}
+Let $\pubSet = \{\pubElt[1],\pubElt[2],\cdots,\pubElt[\nbShares]\}$ be an evaluation subset of a finite field $\Field$ and let $\RS[\pubSet, \order + 1]\subseteq \Field^{\nbShares}$ be the corresponding Reed-Solomon code. A {\em linear exact repair scheme} for this code over a subfield $\FField$ of $\Field$ is composed of the following steps:
+\begin{itemize}
+\item for each $\pubEltStar\in \pubSet$, and for each $\pubEltNoIndex\in \pubSet \slash \{\pubEltStar\}$, a set of queries $Q_{\pubEltNoIndex}(\pubEltStar)\subseteq \Field$,
+\item for each $\pubEltNoIndex \in pubSet$ and any polynomial $P(X)\in \Field[X]$ with degree lower than $\order +1$, a linear reconstruction algorithm that computes 
+$$
+P(\pubEltStar) = \sum_{i=1}^t\lambda_i \cdot \nu_i \enspace ,
+$$
+for coefficients $\lambda_i\in \FField$ and a basis $\{\nu_1,\nu_2,\cdots,\nu_t\}$ for $\Field$ over $\FField$, so that the coefficients $\lambda_i$ are $\FField$-linear combinations of the queries in 
+$$
+\bigcup_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}}\{\myTrace(\gamma\cdot P(\pubEltNoIndex); \gamma \in Q_{\pubEltNoIndex}(\pubEltStar)\} \enspace .
+$$
+\end{itemize}
+\end{definition}
+
+The {\em repair bandwith} $RB$ of a LERS is the maximum number of sub-symbols which must be returned by the nodes to recover $P(\pubEltStar)$. It is defined by:
+$$
+RB = \max_{\pubEltStar \in \pubSet} \sum_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}} \# Q_{\pubEltNoIndex}(\pubEltStar) \enspace .
+$$
+
+One of the main goals of LERS schemes is to minimize the maximum number of bits $RB\times \log_2(\FField)$ required to reconstruct $P(\pubEltStar)$ for any $\pubEltStar\in \pubSet$ and any polynomial $P(X)$. During the last few years, there have been several publications tackling this issue in the context of RS codes (see \eg \cite{DRWS11,SPDC13}), or more generally, for MDS codes (see \eg \cite{CHJL11,DGWWR10,SR10}). Depending on the extension dimension $t$ of $\Field$ over $\FField$, some lower bounds have been given:
+\begin{itemize}
+\item when $t$ is sufficiently large, $RB$ is bounded below by $(t\cdot RL)/(RL-\order)$, where $RL$ denotes the {\em repair locality} and corresponds to the maximum number of $\pubElt \in \pubSet$ that are required to recover $P(\pubEltStar)$ whatever $\pubEltStar \in \pubSet$. For very large values of $t$, several schemes have been proposed for which the lower bound is achieved (see \eg \cite{CHJL11,SR10}).
+\item when $t$ is small, it is clear that the lower bound above cannot be achieved since we have $RB \geqslant \order + t$. It must however be observed that this latter bound is much better than the naive one $t\times (\order + 1)$. \comEP{To continue...}
+\end{itemize}
 \subsection{Towards a Lower Bound}
  \todo{}
 
@@ -88,6 +189,6 @@
  \todo{}
  
 \bibliographystyle{abbrv}
-\bibliography{sca}
+\bibliography{sca,ANSSI}
 
 \end{document}
