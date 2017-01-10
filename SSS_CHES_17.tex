@@ -169,6 +169,20 @@ One of the main goals of LERS schemes is to minimize the maximum number of bits 
 \item when $t$ is sufficiently large, $RB$ is bounded below by $(t\cdot RL)/(RL-\order)$, where $RL$ denotes the {\em repair locality} and corresponds to the maximum number of $\pubElt \in \pubSet$ that are required to recover $P(\pubEltStar)$ whatever $\pubEltStar \in \pubSet$. For very large values of $t$, several schemes have been proposed for which the lower bound is achieved (see \eg \cite{CHJL11,SR10}).
 \item when $t$ is small, it is clear that the lower bound above cannot be achieved since we have $RB \geqslant \order + t$. It must however be observed that this latter bound is much better than the naive one $t\times (\order + 1)$. \comEP{To continue...}
 \end{itemize}
+
+In the recent work \cite{GW16}, the authors show that the construction of a LERS for a Reed-Solomon code $\RS[\pubSet, \order + 1]$ and a subfield $\FField$ of $\Field$
+is equivalent to the finding, for any $\pubEltStar\in \pubSet$, of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$, such that:
+\begin{itemize}
+\item (1) for any $j\in [1:t]$, we have 
+$$
+\myTrace(\zeta_j P(\pubEltStar)) = \sum_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}} \myTrace(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar)P(\pubEltNoIndex))
+$$
+\item and (2) the following equality holds
+$$
+P(\pubEltStar) = \sum_{j=1}^t \myTrace(\zeta_j P(\pubEltStar)) \enspace .
+$$ 
+\end{itemize}
+
 \subsection{Towards a Lower Bound}
  \todo{}
 
