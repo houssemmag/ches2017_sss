@@ -1,18 +1,9 @@
 \documentclass{llncs}
 \pagestyle{plain}
-
-\usepackage{color}
-
 \usepackage{graphicx}
-\usepackage{epstopdf}
 \usepackage{hyperref}
 \usepackage{amsmath,amssymb}
 \usepackage{tabularx}
-\usepackage{rotating}% for sidewaystable
-\usepackage{array}
-\usepackage{multirow}
-\usepackage{stmaryrd} % Provides \llbracket and \rrbracket used for intervals of integers
-\usepackage{colortbl} % For \cellcolor
 \usepackage{algorithm}
 \usepackage{algpseudocode} 
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -148,7 +139,7 @@ In a linear repair scheme, the node corresponding to a public point $\pubElt$ re
 Let $\pubSet = \{\pubElt[1],\pubElt[2],\cdots,\pubElt[\nbShares]\}$ be an evaluation subset of a finite field $\Field$ and let $\RS[\pubSet, \order + 1]\subseteq \Field^{\nbShares}$ be the corresponding Reed-Solomon code. A {\em linear exact repair scheme} for this code over a subfield $\FField$ of $\Field$ is composed of the following steps:
 \begin{itemize}
 \item for each $\pubEltStar\in \pubSet$, and for each $\pubEltNoIndex\in \pubSet \slash \{\pubEltStar\}$, a set of queries $Q_{\pubEltNoIndex}(\pubEltStar)\subseteq \Field$,
-\item for each $\pubEltNoIndex \in pubSet$ and any polynomial $P(X)\in \Field[X]$ with degree lower than $\order +1$, a linear reconstruction algorithm that computes 
+\item for each $\pubEltNoIndex \in \pubSet$ and any polynomial $P(X)\in \Field[X]$ with degree lower than $\order +1$, a linear reconstruction algorithm that computes 
 $$
 P(\pubEltStar) = \sum_{i=1}^t\lambda_i \cdot \nu_i \enspace ,
 $$
@@ -174,14 +165,16 @@ In the recent work \cite{GW16}, the authors show that the construction of a LERS
 is equivalent to the finding, for any $\pubEltStar\in \pubSet$, of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$, such that:
 \begin{itemize}
 \item (1) for any $j\in [1:t]$, we have 
-$$
+\begin{equation}\label{equ:LERS_1}
 \myTrace(\zeta_j P(\pubEltStar)) = \sum_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}} \myTrace(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar)P(\pubEltNoIndex))
-$$
+\end{equation}
 \item and (2) the following equality holds
-$$
+\begin{equation}\label{equ:LERS_2}
 P(\pubEltStar) = \sum_{j=1}^t \myTrace(\zeta_j P(\pubEltStar)) \enspace .
-$$ 
+\end{equation}
 \end{itemize}
+The core observation in \cite{GW16} is that, surprisingly, for some $\pubEltNoIndex\in \pubSet$ the size of all the elements required to build the set $\{\myTrace(\zeta_j P(\pubEltNoIndex));j\in [1;t]\}$ may be smaller than $P(\pubEltNoIndex)$. This implies that the total number of bits required to recover $P(\pubEltStar)$ from \eqref{equ:LERS_1} and \eqref{equ:LERS_2} may be smaller than $(\order +1)\log_2(\# \Field)$ (corresponding to a direct polynomial interpolation). Actually, it is shown in \cite{GW16} that the construction of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ minimizing the repair bandwidth is equivalent to the problem of finding some nice polynomials over $\Field$ and some explicit constructions are proposed.
+
 
 \subsection{Towards a Lower Bound}
  \todo{}
