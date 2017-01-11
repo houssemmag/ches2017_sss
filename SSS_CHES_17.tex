@@ -160,7 +160,7 @@ One of the main goals of LERS schemes is to minimize the maximum number of bits 
 \item when $t$ is sufficiently large, $RB$ is bounded below by $(t\cdot RL)/(RL-\order)$, where $RL$ denotes the {\em repair locality} and corresponds to the maximum number of $\pubElt \in \pubSet$ that are required to recover $P(\pubEltStar)$ whatever $\pubEltStar \in \pubSet$. For very large values of $t$, several schemes have been proposed for which the lower bound is achieved (see \eg \cite{CHJL11,SR10}).
 \item when $t$ is small, it is clear that the lower bound above cannot be achieved since we have $RB \geqslant \order + t$. It must however be observed that this latter bound is much better than the naive one $t\times (\order + 1)$. \comEP{To continue...}
 \end{itemize}
-
+\subsection{Explicit Constructions for Reed-Solomon Codes}
 In the recent work \cite{GW16}, the authors show that the construction of a LERS for a Reed-Solomon code $\RS[\pubSet, \order + 1]$ and a subfield $\FField$ of $\Field$
 is equivalent to the finding, for any $\pubEltStar\in \pubSet$, of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$, such that:
 \begin{itemize}
@@ -173,10 +173,25 @@ is equivalent to the finding, for any $\pubEltStar\in \pubSet$, of field element
 P(\pubEltStar) = \sum_{j=1}^t \myTrace(\zeta_j P(\pubEltStar)) \enspace .
 \end{equation}
 \end{itemize}
-The core observation in \cite{GW16} is that, surprisingly, for some $\pubEltNoIndex\in \pubSet$ the size of all the elements required to build the set $\{\myTrace(\zeta_j P(\pubEltNoIndex));j\in [1;t]\}$ may be smaller than $P(\pubEltNoIndex)$. This implies that the total number of bits required to recover $P(\pubEltStar)$ from \eqref{equ:LERS_1} and \eqref{equ:LERS_2} may be smaller than $(\order +1)\log_2(\# \Field)$ (corresponding to a direct polynomial interpolation). Actually, it is shown in \cite{GW16} that the construction of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ minimizing the repair bandwidth is equivalent to the problem of finding some nice polynomials over $\Field$ and some explicit constructions are proposed.
+The core observation in \cite{GW16} is that, surprisingly, for some $\pubEltNoIndex\in \pubSet$ the size of all the elements required to build the set $\{\myTrace(\zeta_j P(\pubEltNoIndex));j\in [1;t]\}$ may be smaller than $P(\pubEltNoIndex)$. This implies that the total number of bits required to recover $P(\pubEltStar)$ from \eqref{equ:LERS_1} and \eqref{equ:LERS_2} may be smaller than $(\order +1)\log_2(\# \Field)$ (corresponding to a direct polynomial interpolation). Actually, it is shown in \cite{GW16} that the construction of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ minimizing the repair bandwidth is equivalent to the problem of finding some nice polynomials over $\Field$ \cite[Theorem 4]{GW16} and some explicit constructions are proposed. In the specific case of Reed-Solomon codes $\RS[\pubSet, \order + 1]$, the construction of the coefficients $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ leading to some repair bandwidth $RB$ over a subfield $\FField\subseteq \Field$ such that $t=[\Field:\FField]$ can be directly deduced from a set $\polySet\in \Field[X]$ of $t$ polynomials of degree $\nbShares - \order - 1$ so that:
+$$
+\dim_{\FField} (\{p(\pubEltStar): p\in \polySet\}) = t
+$$
+and the sets $\{p(\pubEltNoIndex): p\in \polySet\}$ for $\pubEltNoIndex \neq \pubEltStar$ satisfy:
+$$
+RB \geqslant \sum_{\pubEltNoIndex \in \pubSet \backslash \{\pubEltStar\}} \dim_{\FField} (\{p(\pubEltNoIndex): p\in \polySet\}) \enspace .
+$$
+Once such a family of polynomials $\polySet$ is found the coefficients are built so that
+$$
+\{\zeta_1,\cdots,\zeta_t\} = \{p(\pubEltStar): p\in \polySet\}
+$$
+and for every $j\in [1:t]$ and $\pubEltNoIndex \in \pubSet \backslash \{\pubEltStar\}$;
+$$
+\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar) = p(\pubEltNoIndex)\times \frac{\prod_{\beta\in \pubSet \backslash \{\pubEltStar\}}(\pubEltStar - \beta)}{\prod_{\beta\in \pubSet \backslash \{\pubEltStar\}}(\pubEltNoIndex - \beta)} \enspace .
+$$
 
-
-\subsection{Towards a Lower Bound}
+ 
+\subsection{Example}
  \todo{}
 
 \section{Attack against Shamir's Secret Sharing Scheme }
