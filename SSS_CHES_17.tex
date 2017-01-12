@@ -179,17 +179,167 @@ The core observation in \cite{GW16} is that, surprisingly, for some $\pubEltNoIn
 \subsection{Towards a Lower Bound}
  \todo{}
 
-\section{Attack against Shamir's Secret Sharing Scheme }
-\subsection{Attack Description}
- \todo{}
+\section{Side-Channel analysis of Shamir's Secret Sharing Scheme}
+\subsection{Higher-order Side-Channel Resistance: Requirements and Limitations}
+\subsubsection{Higher-order Side-Channel Resistance: Requirements.} To design a $\order$\myth-order masking scheme based on Shamir's Secret Sharing for a block cipher, one have to develop some procedures to protect the different operations involved in this protected algorithm. For instance, most of (if not all) linear operations (\emph{e.g.} XOR) are compatible with linear secret sharing. However, nonlinear operations (\emph{e.g.} AES SBox) are more difficult to deal with since it require to protect the multiplication of shares. Some solutions have been developed in the context of protecting the AES using the Shamir's Secret Sharing\cite{GM11,PR11,RP12} and are mainly based on the multiplication scheme introduced by
+Ben-Or \etal to design secure multy-party computation schemes\cite{BGW88}.
+The method is described in \ref{alg:secmult} and consists in multiplying each two share vectors share by share. This operation corresponds to the multiplication of two degree $d$ polynomials which gives a polynomial of degree $2d$. The secret result of the multiplication can then be recovered with at least $2d + 1$ shares if $n > 2t + 1$. 
+So, to achieve a $\order$\myth-order resistance against side-channel attack, the sharing order must be at least $n = 2d + 1$ (\emph{i.e.} the smallest value allowed in Ben-Or \etal multiplication protocol to guarantee $d$\myth-order resistance).
+
+\subsubsection{Higher-order Side-Channel Resistance: Limitations.} On the other hand, a Shamir's secret sharing scheme is said to be secure at the $d$\myth-order if any set of at most $d$ shares reveals no information about the shared secret value. 
+
+\begin{remark}
+From an attacker perspective, given an $(n=2d+1,d)$ secret sharing it is theoretically possible to recover the shared secret value by exploiting the leakage of any $(d+1)$ combination of shares over the $d+1 \choose n=2d+1$ possible ones. 
+\label{rmk:sca}
+\end{remark}
+\subsubsection{Higher-order Side-Channel Attack Effectiveness: Discussions.} 
+Based on Remark~\ref{rmk:sca}, the following questions would be investigated:
+\begin{enumerate}
+\item \emph{did all $(d+1)$ combination of shares achieve the same attack efficiency?} Actually, an attacker is spoilt for the choice of the combination of $d+1$ shares to use among the several available ones. Our goal here is to check if all $d+1$ combination of shares leak the same amount of information under the same fixed noise level for each share. The result of this investigation may brings some insights on the optimal $(d+1)$ combination of shares, if any exits, that an attacker should consider when performing his attack.
+
+\item \emph{Did any $(d+2)$ combination of shares achieves a better attack result than all $(d+1)$ combination of shares?}. This question is motivated by the fact that when exploiting the leakage of $(d+2)$ combination of shares, the attacker have theoretically access to exactly the same amount of information leaked by any $(d+1)$ combination of shares. Our purpose here is to check the effectiveness of this claim. If the use of some $(d+2)$ combination of shares are more optimal than some (or all) $(d+1)$ combination of shares in terms of side-channel attack efficiency to recover the  secret value, then one can conclude that the shares are not leaking the same amount of information.
+\end{enumerate}    
+
+In what follows, we try to answer these questions by performing practical attacks on simulated traces and real acquisitions captured on the ChipWhisperer platform~\cite{O’Flynn2014}.
+
 \subsection{Attack results on Simulated Traces}
- \todo{}
+\subsubsection{Target Implementation.}
+For our simulation, we targeted a $(5,2)$ secret sharing scheme, \emph{i.e.} the secret value $Z \in GF(2^8)$ is split into $5$ independent shares $(S_0, \cdots, S_4)$ by evaluating a random polynomial of degree $2$ ($P_Z(X)= Z + \mu_1 X + \mu_2 X^2$) in $5$ public points $(\alpha_0, \cdots, \alpha_4)$ and where $\mu_1$ and $\mu_2$ are two random values in $GF(2^8)$.    
+
+\subsubsection{Leakage Model.}
+During the execution of the algorithm, the processing of each share $S_i$ produces some leakage $L_i$ revealing some information about the share value. In our simulation, we have make the following assumptions:
+\begin{itemize}
+\item given the values of the shares, the leakage has a Gaussian distribution. This assumption is fairly realistic and commonly used in side-channel context~\cite{LPRRT14}, and formally stated by: 
+\begin{equation*}
+(L_i | S_i = s) \sim \mathcal{N} (m_{i,s}, \Sigma_{j,s}) \enspace,
+\end{equation*}
+for every share $i$ and for every $s \in GF(2^8)$, where $m_{i,s}$ are expectation vectors defined over $\mathbb{R}^T$ and $\Sigma_{j,s}$ are covariance matrices defined over $\mathbb{R}^{T \times T}$ with $T$ is the dimension of the leakage for each share and is set at $T=1$ in our simulation setup\footnote{If the dimension $T$ equals $1$, then the Gaussian distribution is said to be univariate and its covariance matrix is reduced to the variance of the single coordinate denoted $\sigma^2$. If the $T$ is greater
+than $1$, the Gaussian distribution is said to be multivariate.}.
+\item The leakage $L_i$ is the sum of two \textit{mutually independent} parts: a deterministic function $f_i$ of the share $S_i$ and a Gaussian noise $N_i$:
+\begin{equation*}
+L_i = f_i(S_i) +  N_i \enspace.
+\end{equation*}
+To generate our traces, we considered two types of functions: the Hamming weight and the identity. 
+\item The noises $N_i$ are mutually independent and have the same fixed variance ($\sigma^2$). The rational behind this assumption is to have the same noise level for each share. 
+\end{itemize}
+
+\subsubsection{Attack Strategy.} To evaluate the $(5,2)$ secret sharing, we have performed a higher-order template attack following the procedure described in~\cite{LPRRT14}. Let $(\boldsymbol{\ell_i})_{1\le i \le N} \in \mathbb{R}^5$ be the set of collected traces for the attack phase, then for any key hypothesis value $k\in GF(2^8)$, the likelihood distinguisher\footnote{In practice, one often makes use of the equivalent (averaged) log-likelihood distinguisher.} is defined as:
+
+\begin{equation*}
+d_k= \prod\limits_{i=1}^{N} p_{k}(\boldsymbol{\ell_i}) \enspace,
+\end{equation*}    
+ 
+where $p_k$ denotes the probability density function (pdf) of the leakage. Under the Gaussian assumption, the pdf satisfies:   
+
+\begin{equation}
+p_s : (\boldsymbol{\ell_i}) = (\boldsymbol{\ell_{0,i}}, \cdots, \boldsymbol{\ell_{4,i}}) \mapsto \frac{1}{256^5} \sum_{s_1 \in GF(2^8)} \cdots \sum_{s_4 \in GF(2^8)} \prod\limits_{j=0}^{4} \phi_{m_{j,s_j}, \sigma^2} (\boldsymbol{\ell_{j,i}})
+\label{eq_pdf}
+\end{equation} 
+ 
+where, for every value $x \in \mathbb{R}$, the function $\phi_{m,\sigma^2}(x)$ denotes the pdf of a Gaussian distribution with a mean equals to $m$ and a variance equals to $\sigma^2$. 
+
+In~\cite{LPRRT14} authors have demonstrated that for a $d$\myth-order Boolean masking \eqref{eq_pdf} can be expressed as a higher-order convolution product and then they have provided an efficient method to evaluate this formula in $ \mathcal{O}(d \cdot |GF(2^8)| \cdot log|GF(2^8)|)$ operations. 
+We recall that:
+\begin{itemize}
+\item  when a $d$\myth-order Boolean masking is applied, we have $s_0= Z \oplus \bigoplus\limits_{i=1}^{d} (s_i)$ where the $(s_i)_{1 \le i \le d}$ here denotes the random masks.
+
+\item When a $(n,d)$ secret sharing is applied, the sensitive variable $Z$ stratifies: 
+\begin{equation}
+Z=\bigoplus\limits_{i=0}^{d} (s_i \cdot \beta_i) \enspace,
+\label{eq_Z}
+\end{equation}
+ where $s_i =P_Z(\alpha_i)$ and $\beta_i=\prod\limits_{k=0,k\neq i}^{d} \frac{\alpha_k}{\alpha_i+\alpha_k}$. 
+\end{itemize}
+
+To continue using the efficient procedure for higher-order pdf estimation proposed in~\cite{LPRRT14} in the context of secret sharing scheme, we propose hereafter a simple trick. In fact, we can rewrite \eqref{eq_Z} as $s_0=\frac{Z}{\beta_0}\oplus\bigoplus\limits_{i=1}^{d} (s_i \cdot \frac{\beta_i}{\beta_0})$ and then by denoting $Z'=\frac{Z}{\beta_0}$ and $s'=s_i \cdot \frac{\beta_i}{\beta_0}$ for every $i \in \llbracket 1, d\rrbracket$ we obtain:
+
+\begin{equation*}
+s_0= Z' \oplus \bigoplus\limits_{i=1}^{d} (s'_i) \enspace.
+\end{equation*}
+
+So to evaluate the $(5,2)$ secret sharing scheme, our methodology consists of two-steps:
+
+\begin{enumerate}
+\item Profile the leakage of every share using standard estimation techniques. Under the Gaussian leakage assumption, this estimation amounts to compute the sample means ($m_{i,s_i}$) and variance ($\sigma^2$) of the leakage $(L_i | S_i = s)$ for every share $S_i$ and every possible value $s_i$ based on a set of collected leakage samples.
+\item Use \label{eq_pdf} to perform the higher-order template attack on a new set of collected traces generated with an unknown secret value $Z$.
+\end{enumerate} 
+
+\subsubsection{Attack Results.} 
+
+We plot in Fig.~\ref{fig_3_shares}, for each possible combination of $3$ shares the evolution of the number of traces required to achieve $100\%$ of success rate according to an increasing noise standard deviation. We stress the fact that for each value of the standard deviation, the attacks have been repeated $1.000$ times.  
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=1\textwidth]{Figure/res_125_246_119_104_150.png}
+\caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
+\label{fig_3_shares}
+\end{center}
+\end{figure}
+
+From Fig.~\ref{fig_3_shares}, we observe that some combinations of $3$-shares perform worst than others despite the fact that all shares have the same level of noise. This result could be explained by the fact that the amount of information is different for each share. Hence, an attacker have to choose the optimal combination of $3$ shares to succeed his attack with less traces. Indeed, we have observed that when we use another set of public points the attack results are different and the optimal combinations of $3$-shares change too as shown in Fig.~\ref{fig_3_shares_bis}.    
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=1\textwidth]{Figure/res_86_23_115_107_189.png}
+\caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
+\label{fig_3_shares_bis}
+\end{center}
+\end{figure}
+
+Based on these results, we answer the question (did all $(d+1)$ combination of shares achieve the same attack efficiency?) negatively.
+
+The second investigation we planned to perform is to check if exploiting the leakage of $4$ shares could be more efficient than some or all combination of $3$ shares. We show in Fig.~\ref{fig_4_shares} a comparison between the template attack results when considering all combination of $3$ and $4$ shares. The experiences are repeated $1.000$ times for each combination of shares.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=1\textwidth]{Figure/5_237_zoom.png}
+\caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
+\label{fig_4_shares}
+\end{center}
+\end{figure}
+
+From Fig.~\ref{fig_4_shares}, one can identify that for a specific interval of noise standard deviation, some combination of $4$ outperform all or some combination of $3$ shares. The same observation is valid when changing the set of public points as described in Fig.~\ref{fig_4_shares_bis}.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=1\textwidth]{Figure/169_63_zoom.png}
+\caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
+\label{fig_4_shares_bis}
+\end{center}
+\end{figure}
+
+From Fig.~\ref{fig_4_shares} and Fig.~\ref{fig_4_shares_bis}, the following observations could be emphasized:
+
+\begin{itemize}
+\item The shares are not leaking the same amount of leakage despite the fact that the same quantity of noise has been added to the $5$ used shares to protect the sensitive value $Z$. one can easily notice the differences in terms of attack efficiency when comparing the different used combinations of $4$ and $3$ shares.
+\item Exploiting the leakage of $4$ shares is more efficient than all combination of $3$ shares for some values of the noise standard deviation. This result could be explained by the fact that the combination of $4$ shares may exploit less amount of information from the leaking shares (than all combination of $3$ shares) to recover efficiently (and fast) the secret value (\emph{i.e.} with less traces). When the noise increases, the efficiency of the template attacks exploiting $4$ shares decreases with respect to these using combination of $3$ shares. This behavior is expected since the more noisy shares you combine, the less the signal-to-noise-ration is. 
+\item When comparing both Fig.~\ref{fig_4_shares} and Fig.~\ref{fig_4_shares_bis}, one can notice that the optimal combination of $4$ shares to recover the secret value changes with respect to the used public points. So, the amount of information leaked by the shares depend on the set of public points used to share the secret value. Therefore, an attacker has to adapt the choice of shares to use for his attack with respect to the used set of public points.
+\end{itemize}
+
+Based on these observations, we answer the question (Did any $(d+2)$ combination of shares achieves a better attack result than all $(d+1)$ combination of shares?) positively. 
+
+In order to confirm our findings on simulated traces, we conducted some practical attacks on the ChipWhisperer platform. The experimental setup is described in what follows. 
+
 \subsection{Attack results on Real Device}
- \todo{}
+
+First, we have implemented a $(5,2)$ secret sharing on an $8$-bit AVR microprocessor atxmega128d3 and we acquired power-consumption traces thanks to the ChipWhisperer-Lite (CW1173) basic board. For the leakage profiling step, we have collected $128.000$ traces to estimate the mean and the variance for each share. These statistical estimation results have shown that the shares have roughly the same variance (\emph{i.e.} the same level of noise) which is in-line with our simulation setup. However, the standard deviation of the noise of the acquired traces is actually outside the suitable area where the combinations of $4$ shares outperform the combination of $3$ shares. The estimated noise standard deviation is about $0.7$.
+Then, we have acquired $15.000$ traces for the attack phase and we have performed the template attack by exploiting the leakage of all combination of $4$ and $3$ shares. As expected, the attack results have demonstrated that any combinations of $4$ shares is efficient with respect to the measures noise standard deviation. To decrease the noise level and to fit the suitable interval, we filtered the acquired traces to reach a noise standard deviation value equal to $0.5$. Finally, we re-performed our higher-order template attack. The success rate of the attack for each combination of share is shown in Fig.~\ref{fig_4_shares}.    
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=1\textwidth]{Figure/SR.png}
+\caption{Success rate of the template attack according to an increasing number of traces.}
+\label{fig_SR}
+\end{center}
+\end{figure}
+
+From Fig.~\ref{fig_SR}, one can see that exploiting the leakage of the shares $(0, 1, 3, 4)$ is more suitable in terms of attack efficiency since we require less power measurements to achieve $90\%$ of success rate compared to all combination of $3$ shares. 
+
 
 
 \section{Improvement Proposal of Shamir's Secret Sharing Scheme}
  \todo{}
+
 
 \section{Conclusion}
 \label{sec-conc}
