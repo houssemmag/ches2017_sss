@@ -266,7 +266,7 @@ Z=\bigoplus\limits_{i=0}^{d} (s_i \cdot \beta_i) \enspace,
  where $s_i =P_Z(\alpha_i)$ and $\beta_i=\prod\limits_{k=0,k\neq i}^{d} \frac{\alpha_k}{\alpha_i+\alpha_k}$. 
 \end{itemize}
 
-To continue using the efficient procedure for higher-order pdf estimation proposed in~\cite{LPRRT14} in the context of secret sharing scheme, we propose hereafter a simple trick. In fact, we can rewrite \eqref{eq_Z} as $s_0=\frac{Z}{\beta_0}\oplus\bigoplus\limits_{i=1}^{d} (s_i \cdot \frac{\beta_i}{\beta_0})$ and then by denoting $Z'=\frac{Z}{\beta_0}$ and $s'=s_i \cdot \frac{\beta_i}{\beta_0}$ for every $i \in \llbracket 1, d\rrbracket$ we obtain:
+To continue using the efficient procedure for higher-order pdf estimation proposed in~\cite{LPRRT14} in the context of secret sharing scheme, we propose hereafter a simple trick. In fact, we can rewrite \eqref{eq_Z} as $s_0=\frac{Z}{\beta_0}\oplus\bigoplus\limits_{i=1}^{d} (s_i \cdot \frac{\beta_i}{\beta_0})$ and then by denoting $Z'=\frac{Z}{\beta_0}$ and $s'=s_i \cdot \frac{\beta_i}{\beta_0}$ for every $i \in [ 1: d$ we obtain:
 
 \begin{equation*}
 s_0= Z' \oplus \bigoplus\limits_{i=1}^{d} (s'_i) \enspace.
