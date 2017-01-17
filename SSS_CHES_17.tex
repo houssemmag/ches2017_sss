@@ -10,7 +10,11 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 \usepackage{moreverb}
 \usepackage[dvipsnames,table]{xcolor}
+\usepackage[style=alphabetic,sorting=debug]{biblatex}
 
+\DeclareFieldFormat{labelalpha}{\thefield{entrykey}}
+\DeclareFieldFormat{extraalpha}{}
+\addbibresource{sca,ANSSI}
 \include{macros}
 
 \title{Enhancement of Shamir's Secret Sharing Schemes against Side-Channel Attacks}
@@ -42,12 +46,12 @@
  \todo{}
 \subsubsection{Side-Channel Countermeasures.} 
  \todo{}
-\subsubsection{Shamir's Secret Sharing based Countermeasures.}
+\subsubsection{Countermeasures based on Shamir's Secret Sharing.}
 
 In a seminal paper\,\cite{Sha79}, Shamir proposed to split a secret $A\in \GFn$ into $\nbShares$ shares such that
 no tuple of shares with cardinality lower than a so-called {\em threshold} $\order<\nbShares$ depends on $A$. Shamir's
 protocol consists in associating $A$ with a random polynomial $P_A(X)\doteq A + \sum_{i=1}^{\order}\polyCoef X^i$ of degree lower than $\order$ and with constant term $A=P_A(0)$. Then, the polynomial $P_A(X)$ is evaluated in $\nbShares$ distinct public non-zero elements $\pubElt[0], \ldots, \pubElt[n-1]$ in $\GFn$ to define a so-called {\em $(\nbShares,\order)$-sharing} $(A_0,A_1,\cdots,A_{\nbShares-1})$ of $A$ such that $(A_i)_{i\leqslant \nbShares}=(P_A(\alpha_i))_{i\leqslant \nbShares}$. To re-construct $A$ from its sharing, polynomial interpolation is first applied to re-construct the polynomial from its $\nbShares$ evaluations $A_i$ and then, it is evaluated in $0$. Actually, using Lagrange's
-interpolation formula, the two steps can be combined in a single one thanks to the equality $ A=\sum_{i=0}^{\nbShares-1} A_i \cdot \beta_i\enspace$,  where the (public) constants $\beta_i$ are defined as $\beta_i:=\prod_{k=0,k\neq i}^{\nbShares-1} \frac{\alpha_k}{\alpha_i+\alpha_k}$. As initially observed by McEliece and Sarwate in \cite{MS81}, the sharing of $A$ described above may be viewed as an {\em encoding} with a Reed-Solomon code of parameters $[\nbShares + 1,\order + 1]$:
+interpolation formula, the two steps can be combined in a single one thanks to the equality $ A=\sum_{i=0}^{\nbShares-1} A_i \cdot \beta_i\enspace$,  where the (public) constants $\beta_i$ are defined as $\beta_i:=\prod_{k=0,k\neq i}^{\nbShares-1} \frac{\alpha_k}{\alpha_i+\alpha_k}$. The vector composed of the $n$ weights $\beta_i$ is denoted by $\vec \beta$ and the scalar product is called $n$-reconstruction. As initially observed by McEliece and Sarwate in \cite{MS81}, the sharing of $A$ described above may be viewed as an {\em encoding} with a Reed-Solomon code of parameters $[\nbShares + 1,\order + 1]$:
 $$
 (A,A_1,\cdots,A_{\nbShares}) = (A,\polyCoef[1],\cdots,\polyCoef[\order])\times 
 \left(\begin{matrix}
@@ -78,33 +82,41 @@ due to Gennaro \etal in \cite{GRR98}.}.
 \caption{Secure Multiplication For Shamir's Secret Sharing}
 \label{alg:secmult}
 \begin{algorithmic}[1]
-\Require {two integers $\nbShares$ and $\order$ such that $n\geq 2d+1$, the  $(\nbShares,\order)$-sharings $(A_i)_i=(P_A(\pubElt))_i$ and $(B_i)_i=(P_{B}(\pubElt))_i$ of $A$ and $B$ respectively.}
+\Require {two integers $\nbShares$ and $\order$ such that $n\geq 2d+1$, the  $(\nbShares,\order)$-sharings $(u_i)_i=(P_u(\pubElt))_i$ and $(v_i)_i=(P_{v}(\pubElt))_i$ of $u$ and $v$ respectively.}
 \Require   {the $\nbShares$ distinct points $\pubElt$, the interpolation values $(\beta_0,\cdots,\beta_{\nbShares-1})$}
-\Ensure     {the $(\nbShares,\order)$-sharing $(P_{C}(\alpha_i))_i$ of $C=A\cdot B$. }
-\For{$i=1$ \textbf{to} $\nbShares$}
-\State $W_i \leftarrow P_A(\pubElt)\cdot P_{B}(\pubElt)$
+\Ensure     {the $(\nbShares,\order)$-sharing $(P_{C}(\alpha_i))_i$ of $w=u\cdot v$. }
 
-\Comment{Compute a sharing $(Q_i(\alpha_j))_{j\leq d}$ of $W_i$ with $Q_i (X) = W_i + \sum_{j=1}^{\order} a_j\cdot X^j$}
+
+\Comment{Compute a $\nbShares$-sharing $(t_1,\cdots,t_n)$ of $w$}
+\For{$i=1$ \textbf{to} $\nbShares$}
+\State $t_i \leftarrow P_u(\pubElt)\cdot P_{v}(\pubElt)$
+\EndFor
+
+\Comment{For every share $t_i$, compute a sharing $(Q_i(\alpha_j))_{j\leq n}$ with $Q_i (X)$ a random degree-$d$ polynomial with constant term $t_i$}
+\For{$i=1$ \textbf{to} $\nbShares$}
 \For{$j=1$ \textbf{to} $\order$}
-\State $a_j \leftarrow \texttt{rand}(\GFn)$
+\State $\omega_j \leftarrow \texttt{rand}(\GFn)$
 \EndFor
 \For{$j=1$ \textbf{to} $\nbShares$}
-\State $Q_i(\pubElt[j]) \leftarrow W_i +
-      \sum_{k=1}^{\order} a_k\cdot \pubElt[j]^k$ \label{step:reshare} 
+\State $Q_i(\pubElt[j]) \leftarrow \beta_i \cdot t_i +
+      \sum_{k=1}^{\order} \omega_k\cdot \pubElt[j]^k$ \label{step:reshare}   	
 \EndFor  	
 \EndFor
    	
-\Comment{Compute the share $C_i = P_{C}(\pubElt)$ for $C=A \cdot B$}
+\Comment{Compute the share $w_i = P_{w}(\pubElt)$ for $w=u \cdot v$}
 \For{$i=1$ \textbf{to} $\nbShares$}
-\State $C_i \leftarrow \sum_{j=1}^{\nbShares} Q_j(\pubElt) \cdot \beta_j$
+\State $w_i \leftarrow \sum_{j=1}^{\nbShares} Q_j(\pubElt)$
 \EndFor
-\Return $(C_i)_i$
+\Return $(w_i)_i$
 \end{algorithmic}
 \end{algorithm}
 
 
 
 The completeness of Algorithm \ref{alg:secmult} is discussed in \cite{BGW88}. Its $\order$\myth-order SCA security can be straightforwardly deduced from the proof given by Ben-Or \etal in \cite{BGW88} in the secure multi-party computation context. Eventually, for $\nbShares=2\order+1$ (which is the parameter choice which optimizes the security/efficiency overhead), the complexity of Algorithm \ref{alg:secmult} in terms of additions and multiplications is ${\cal O}(\order^3)$.
+
+Algorithm \ref{alg:secmult} may be rewritten in terms of coding theory, essentially because an $(\nbShares,\order)$-sharing with Shamir's scheme exactly corresponds to an encoding by a Reed-Solomon code with parameters $[\nbShares+1,\order+1]$ \cite{MS81}. Let $\RSCode$ denote the latter code and let $\RSProduct$ denote the {\em product code} built from $\RSCode$ by taking all the componentwise products of codewords in $\RSCode$. On one hand, the tuple $\wordRSProduct = (t_1,\cdots,t_{2n})$ in Algorithm \ref{alg:secmult} forms a sharing of $w=u\cdot v$ in $\RSProduct$ and a reconstruction algorithm is simply given by the scalar product with $\vec \beta$ (this is a direct consequence of Lagrange's interpolation formula). On the other hand, loop $6$-$8$ (over indices $i$ and $j$) and loop $10$-$12$ may be viewed as a {\em transcoding} $\trans$ that securely transforms the sharing $\wordRSProduct\in \RSProduct$ of $w$  into a sharing $\wordRS \in \RSCode$. Eventually, it can be observed that the algorithm completeness holds because the constant term of the polynomial associated to the codeword $\RSCode$ has constant term the $n$-reconstruction $\sum_i \beta_i\cdot w_i$. If the product by $\beta_i$ is done once during the building of $t_i$ (at Step $2$), then Algorithm \ref{alg:secmult} involves $n$ multiplications and the evaluations of $\nbShares$ degree-$d$ polynomials in $n$ points (which makes $\nbShares^2\times d$ multiplications for a naive implementation and $O(\nbShares \log^2 \nbShares)$ multiplications using FFT-based polynomial division\footnote{The constant terms being important in this complexity the naive approach is always more efficient for practical choices of $\nbShares$ and $\order$.} \cite{CPR12}). In \cite{CRZ13}, the authors observed that the addition of a random sharing $\wordRSProductZero\in \RSProduct$ of $0$ to $\wordRSProduct$ makes it possible reduce the number of polynomials to evaluate from $\nbShares$ to $\order+1$, without compromising the security at order $\order$. The core idea is to precede the transcoding by a shortening of the sharing $\wordRSNew \doteq (\wordRSProduct_1 + \wordRSProductZero_1,\cdots,\wordRSProduct_{\nbShares} + \wordRSProductZero_{\nbShares} )$ into $(\sum_{i=1}^{\nbShares - \order}\beta_i \wordRSNew_i,\beta_{\nbShares -\order+1}\wordRSNew_{\nbShares -\order+1},\cdots,\beta_{\nbShares}\wordRSNew_{\nbShares})$.
+
 \subsubsection{Our Contribution.}
  \todo{}
 \subsubsection{Paper Outline.}
@@ -360,7 +372,10 @@ From Fig.~\ref{fig_SR}, one can see that exploiting the leakage of the shares $(
 \label{sec-conc}
  \todo{}
  
-\bibliographystyle{abbrv}
-\bibliography{sca,ANSSI}
+%\bibliographystyle{abbrv}
+%\bibliography{sca,ANSSI}
 
+
+
+\printbibliography
 \end{document}
