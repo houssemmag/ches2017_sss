@@ -2,6 +2,12 @@
 \newenvironment{notation}{\begin{trivlist}\item[] {\em Notation.}}%
 {\samepage \end{trivlist}}
 
+%Sharing/Masking
+\newcommand{\vShared}{a}
+\newcommand{\vShare}[1][i]{\vShared_{#1}}
+\newcommand{\vLeak}[1][i]{\ell_{#1}}
+
+
 % Probability definitions
 
 \newcommand\myP[1]{\ensuremath\mathsf{P}\lbrack #1 \rbrack}     % The probability
@@ -12,7 +18,7 @@
 \newcommand\myH[1]{\ensuremath\mathsf{H}\lbrack #1 \rbrack}     % The entropy
 \newcommand\todo[1]{\textcolor{red}{TODO: #1}}
 \newcommand{\codel}{$(3,6)\text{-code}$ }
-
+\newcommand{\mi}{\mathrm{MI}}
 % Finite Fields definitions
 
 \def \GF {\mathrm{GF}}
@@ -38,6 +44,7 @@
 \def\eg{\textit{e.g.} }
 \def\resp{{\em resp.} }
 \def\myth{$^\text{th}$}
+\def\th{$^\text{th}$}
 
 % ECC
 \def\RSCode{\mathcal{C}}

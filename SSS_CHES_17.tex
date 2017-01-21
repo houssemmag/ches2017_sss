@@ -43,10 +43,26 @@
 \label{sec-intro}
 
 \subsubsection{Side-Channel Attacks.}
+In the late nineties, attacks called {\em Side Channel Analysis} (SCA for short) have been exhibited against cryptosystems implemented in embedded devices. Since the seminal works \cite{Koc96,KJJ99}, the attacks have been refined and, in particular, the initial principle has been generalized in order to exploit several instantaneous leakage points simultaneously. This led to the introduction of the {\em higher-order} SCA concept \cite{Mes00a}. To defeat the latter attacks, whose practically has been argued in several papers \cite{OMHT06,SVOGMKM10a,LPR13}, secret sharing techniques (a.k.a. masking) are currently the most promising type of countermeasures. They can indeed be applied to get implementations with a scalable security, parametrized by the number of shares and some physical properties of the device \cite{CJRR99a,PR13}. The core idea of secret sharing, originally introduced in \cite{Sha79}, is to split any sensitive variable $\vShared$ manipulated by the device into several (say $\nbShares$) shares $\vShare$, and to process elementary operations on them while maintaining the property that any tuple of $\order \leqslant \nbShares$ intermediate results is independent of
+any secret-dependent value. The latter property is usually called {\em $\order$\th-order security property}. It has been argued in several papers (\eg \cite{DDF14,DFS15,GHR15,SVOGMKM10}) that the difficulty of recovering information on the shared data $\vShared$ from noisy observations $(\vLeak)_{i\in [0;\nbShares-1]}$ on its shares $(\vShare)_{i\in [0;\nbShares-1]}$ increases when the mutual information $\mi(\vShared;(\vLeak)_{i\in [0;\nbShares -1]})$ decreases (the latter mutual information being itself bounded above by $\mathrm{O}(t^{\order/2})$ where $t$ satisfies $\mi(\vShare;\vLeak)<t$ for every $i\in [0;\nbShares -1]$, see \cite{DFS15}). When the security order $\order$ and the number of shares $\nbShares$ are fixed, there are two ways to make the mutual information $\mi(\vShared;(\vLeak)_{i\in [0;\nbShares -1]})$ as small as possible. The first solution is to simply ensure that the observation of the shares is (very) noisy; this amounts to physically ensure that $t$ is small. The second solution is to chose complex sharings as proposed for instance in \cite{BFG15,FMPR10,PR11,RP12,WSYPJGG16}. This paper discusses the latter approach, in the particular case of Shamir's sharing used in \cite{PR11,RP12}.
+
+\subsubsection{State of the Art.} In the side-channel security literature, the most classical sharing strategy is the {\em Boolean sharing}. To achieve security at order $\order$, it simply consists in representing each sensitive variable $\vShared$ into $\nbShares=\order+1$ shares $a_0$, $\cdots$, $a_{\nbShares-1}$ such that $a=a_0 + \cdots + a_{\nbShares -1}$, with $+$ being the Boolean (x-or) addition. Th simplicity of the sharing is an advantage from an implementation complexity point of view but, one the flip side, it helps the attacker: the information on the shared data is relatively  easy to rebuild from the observed shares. In \cite{PR11}, Prouff and Roche propose to apply Shamir's secret sharing (SSS for short) \cite{Sha79} to address this point: each intermediate result $\vShared$ is now shared into $\nbShares\geqslant 2\order +1$ shares $\vShare$ which correspond to the evaluation, in $n$ distinct non-zero public elements, of a random degree-$d$ polynomial with constant term $a$. The $\order$\th-order security property comes as a direct consequence of the so-called {\em collusion resistance} of Shamir's sharing. At the cost of an increase of the timing complexity of the resulting implementations (compared to those obtained for Boolean sharing), the authors argue that the intrinsic complexity of Shamir's sharing significantly reduces the amount of information on $\vShared$ which leaks from the observations of its shares (see Figure \ref{fig:miBoolSSS} for an illustration for $\order=1,2$). This type of informational argumentation is the cornerstone of Balasch \etal's work \cite{BFG15}, which is based on the concept of Inner Product (IP) sharing \cite{DF12}, or of Wu \etal's recent work \cite{WSYPJGG16}. It has motivated several further studies on the application of SSS to secure implementation against side-channel attacks \cite{CPR12,CRZ13,GM11,GSF13,MM13}.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{Figure/mutinf_comparizon.pdf}
+\caption{Mutual information (log10) between the leakage and the sensitive variable over
+an increasing noise standard deviation (x-axis).}
+\label{fig:miBoolSSS}
+\end{center}
+\end{figure}
+
+\subsubsection{Contributions.} All previous works assume that the most efficient way to attack an $(\nbShares,\order)$-sharing (namely an SSS sharing with $\nbShares$ shares and a degree-$\order$ polynomial) is to observe exactly $\order +1$ shares. The underlying remarks are (1) that observing strictly less shares does not provide information on the shared variable (by property of SSS) and (2) that observing strictly more than $\order +1$ shares will merely provide the attacker with more noise since the knowledge of exactly $\order +1$ shares he has already all the information to rebuild $\vShared$ with exactly $\order + 1$ shares. This paper essentially aims at coming back on the second latter remark which has been assumed, without being proved, in all previous works in the application of SSS in the SCA context. We actually highlight an important difference between Boolean and SSS sharings which implies that, for some signal-to-noise ratio, it is more advantageous for the adversary to observe strictly more than $\order+1$ shares. This is illustrated in the following simulations resulats which are discussed in Section ...
  \todo{}
-\subsubsection{Side-Channel Countermeasures.} 
- \todo{}
-\subsubsection{Countermeasures based on Shamir's Secret Sharing.}
+\subsubsection{Paper Outline.}
+
+
+\section{Preliminaries on Shamir's Secret Sharing.}
 
 In a seminal paper\,\cite{Sha79}, Shamir proposed to split a secret $A\in \GFn$ into $\nbShares$ shares such that
 no tuple of shares with cardinality lower than a so-called {\em threshold} $\order<\nbShares$ depends on $A$. Shamir's
@@ -115,96 +131,11 @@ due to Gennaro \etal in \cite{GRR98}.}.
 
 The completeness of Algorithm \ref{alg:secmult} is discussed in \cite{BGW88}. Its $\order$\myth-order SCA security can be straightforwardly deduced from the proof given by Ben-Or \etal in \cite{BGW88} in the secure multi-party computation context. Eventually, for $\nbShares=2\order+1$ (which is the parameter choice which optimizes the security/efficiency overhead), the complexity of Algorithm \ref{alg:secmult} in terms of additions and multiplications is ${\cal O}(\order^3)$.
 
-Algorithm \ref{alg:secmult} may be rewritten in terms of coding theory, essentially because an $(\nbShares,\order)$-sharing with Shamir's scheme exactly corresponds to an encoding by a Reed-Solomon code with parameters $[\nbShares+1,\order+1]$ \cite{MS81}. Let $\RSCode$ denote the latter code and let $\RSProduct$ denote the {\em product code} built from $\RSCode$ by taking all the componentwise products of codewords in $\RSCode$. On one hand, the tuple $\wordRSProduct = (t_1,\cdots,t_{2n})$ in Algorithm \ref{alg:secmult} forms a sharing of $w=u\cdot v$ in $\RSProduct$ and a reconstruction algorithm is simply given by the scalar product with $\vec \beta$ (this is a direct consequence of Lagrange's interpolation formula). On the other hand, loop $6$-$8$ (over indices $i$ and $j$) and loop $10$-$12$ may be viewed as a {\em transcoding} $\trans$ that securely transforms the sharing $\wordRSProduct\in \RSProduct$ of $w$  into a sharing $\wordRS \in \RSCode$. Eventually, it can be observed that the algorithm completeness holds because the constant term of the polynomial associated to the codeword $\RSCode$ has constant term the $n$-reconstruction $\sum_i \beta_i\cdot w_i$. If the product by $\beta_i$ is done once during the building of $t_i$ (at Step $2$), then Algorithm \ref{alg:secmult} involves $n$ multiplications and the evaluations of $\nbShares$ degree-$d$ polynomials in $n$ points (which makes $\nbShares^2\times d$ multiplications for a naive implementation and $O(\nbShares \log^2 \nbShares)$ multiplications using FFT-based polynomial division\footnote{The constant terms being important in this complexity the naive approach is always more efficient for practical choices of $\nbShares$ and $\order$.} \cite{CPR12}). In \cite{CRZ13}, the authors observed that the addition of a random sharing $\wordRSProductZero\in \RSProduct$ of $0$ to $\wordRSProduct$ makes it possible reduce the number of polynomials to evaluate from $\nbShares$ to $\order+1$, without compromising the security at order $\order$. The core idea is to precede the transcoding by a shortening of the sharing $\wordRSNew \doteq (\wordRSProduct_1 + \wordRSProductZero_1,\cdots,\wordRSProduct_{\nbShares} + \wordRSProductZero_{\nbShares} )$ into $(\sum_{i=1}^{\nbShares - \order}\beta_i \wordRSNew_i,\beta_{\nbShares -\order+1}\wordRSNew_{\nbShares -\order+1},\cdots,\beta_{\nbShares}\wordRSNew_{\nbShares})$.
-
-\subsubsection{Our Contribution.}
- \todo{}
-\subsubsection{Paper Outline.}
+Algorithm \ref{alg:secmult} may be rewritten in terms of coding theory, essentially because an $(\nbShares,\order)$-sharing with Shamir's scheme exactly corresponds to an encoding by a Reed-Solomon code with parameters $[\nbShares+1,\order+1]$ \cite{MS81}. Let $\RSCode$ denote the latter code and let $\RSProduct$ denote the {\em product code} built from $\RSCode$ by taking all the componentwise products of codewords in $\RSCode$. On one hand, the tuple $\wordRSProduct = (t_1,\cdots,t_{2n})$ in Algorithm \ref{alg:secmult} forms a sharing of $w=u\cdot v$ in $\RSProduct$ and a reconstruction algorithm is simply given by the scalar product with $\vec \beta$ (this is a direct consequence of Lagrange's interpolation formula). On the other hand, loop $6$-$8$ (over indices $i$ and $j$) and loop $10$-$12$ may be viewed as a {\em transcoding} $\trans$ that securely transforms the sharing $\wordRSProduct\in \RSProduct$ of $w$  into a sharing $\wordRS \in \RSCode$. Eventually, it can be observed that the algorithm completeness holds because the constant term of the polynomial associated to the codeword $\RSCode$ has constant term the $n$-reconstruction $\sum_i \beta_i\cdot w_i$. If the product by $\beta_i$ is done once during the building of $t_i$ (at Step $2$), then Algorithm \ref{alg:secmult} involves $n$ multiplications and the evaluations of $\nbShares$ degree-$d$ polynomials in $n$ points (which makes $\nbShares^2\times d$ multiplications for a naive implementation and $O(\nbShares \log^2 \nbShares)$ multiplications using FFT-based polynomial division\footnote{The constant terms being important in this complexity the naive approach is always more efficient for practical choices of $\nbShares$ and $\order$.} \cite{CPR12}). In \cite{CRZ13}, the authors observed that the addition of a random sharing $\wordRSProductZero\in \RSProduct$ of $0$ to $\wordRSProduct$ makes it possible to reduce the number of polynomials to evaluate from $\nbShares$ to $\order+1$, without compromising the security at order $\order$. The core idea is to precede the transcoding by a shortening of the sharing $\wordRSNew \doteq (\wordRSProduct_1 + \wordRSProductZero_1,\cdots,\wordRSProduct_{\nbShares} + \wordRSProductZero_{\nbShares} )$ into $(\sum_{i=1}^{\nbShares - \order}\beta_i \wordRSNew_i,\beta_{\nbShares -\order+1}\wordRSNew_{\nbShares -\order+1},\cdots,\beta_{\nbShares}\wordRSNew_{\nbShares})$.
 
 
-\section{Exact Repair Problem}
-\subsection{Preliminaries}
 
-A {\em linear code} $\mathcal{C}$ of length $\nbShares$ and dimension $k$ over a finite field $\Field$ is a $k$-dimensional subspace of $\Field^{\nbShares}$. It is denoted by $\mathcal{C}[n,k]$. A particular linear code is the {\em Reed-Solomon Code} whose definition is recalled hereafter.
 
-\begin{definition}[Reed-Solomon Code]
-The Reed-Solomon code $\RS[\pubSet, \order + 1]\subseteq \Field^{\nbShares}$ of dimension $\order + 1$ over a finite field $\Field$ and with evaluation subset $\pubSet = \{\pubElt[1],\pubElt[2],\cdots,\pubElt[\nbShares]\}$ of $\Field$ is the subspace:
-$$\RS[\pubSet,\order + 1] = \{(P(\pubElt[1]),P(\pubElt[2]),\cdots,P(\pubElt[\nbShares])); P(X) \in \Field[X] \text{ and } \deg(P) \leqslant \order\} \enspace .$$
-\end{definition}
-
-Reed-Solomon codes are {\em Maximum Distance Separable} (MDS) codes, which means that any $\order + 1$ symbols (that is, evaluations of a polynomial $P(X)\in \RS[\pubSet,\order+1]$) can be used to recover the entire codeword (that is,
-$P(X)$ itself).
-\vspace{3mm}
-
-Let us assume that a file, consisting of $\order + 1$ blocks, is encoded into $\nbShares$ nodes. {\em Exact Repairing codes} have been originally introduced to recover the contents of an erased node by downloading some information from the remaining nodes. In the language of an $\RS[\pubSet,\order+1]$ code as above, the file is a polynomial $P(X)\in \Field[X]$ with $\deg(P(X)) \leqslant \order$ and each node is associated with an evaluation point $\pubElt \in \pubSet$ and stores $P(\pubElt)$. For an arbitrary $\pubEltStar\in \pubSet$ (corresponding to an erased node), the goal is to recover $P(\pubEltStar)$ given some information from the other nodes. Since the code is MDS, its is straightforward to do it by choosing any subset of $\pubSet$ with cardinality $\order + 1$ and by asking the evaluations $P(\pubElt)$ to the corresponding nodes. This means that, for any $\pubEltStar$, the evaluation $P(\pubEltStar)$ can at least be recovered by asking $\log_2(\Field)$ bits of information (corresponding to $P(\pubElt)$) to $\order +1$ nodes. Linear repairing codes aim to define a repairing scheme such that, for any $\pubEltStar$, the evaluation $P(\pubEltStar)$ can be recovered with strictly less than $(\order + 1)\times \log_2(\Field)$ bits of information, by allowing each node to return any $\FField$-linear function of its content, with $\FField$ being a subfield of $\Field$. The $\FField$-linear functions from $\FField$ to $\Field$ may all be defined from the so-called {\em field trace} of $\Field$ over $\FField$. We recall the definition of the field trace hereafter:
-
-\begin{definition}[Field Trace]
-Let $p$ and $r$ be two integers and let $q=p^r$. Let $\Field=\GF(q^t)$ be a degree-$t$ finite field extension of a $\FField=\GF(q)$. The {\em field trace} $\myTrace$ is defined for every $\beta \in \Field$ as:
-\begin{equation}\label{equ:trace}
-\myTrace(\beta) = \beta + \beta^q + \beta^{q^2} + \cdots + \beta^{q^{t-1}} \enspace .
-\end{equation}
-\end{definition}
-
-In a linear repair scheme, the node corresponding to a public point $\pubElt$ returns zero or more elements of $\FField$ of the form $\myTrace(\gamma P(\pubElt))$ for some field elements $\gamma \in \Field$. A linear exact repair scheme can then be described by the field elements $\gamma$ used by all the nodes, along with a (linear) repair algorithm. A precise definition in the context of Reed-Solomon codes is given below:
-
-\begin{definition}[Linear Exact Repair Scheme (LERS)]\label{def:LERS}
-Let $\pubSet = \{\pubElt[1],\pubElt[2],\cdots,\pubElt[\nbShares]\}$ be an evaluation subset of a finite field $\Field$ and let $\RS[\pubSet, \order + 1]\subseteq \Field^{\nbShares}$ be the corresponding Reed-Solomon code. A {\em linear exact repair scheme} for this code over a subfield $\FField$ of $\Field$ is composed of the following steps:
-\begin{itemize}
-\item for each $\pubEltStar\in \pubSet$, and for each $\pubEltNoIndex\in \pubSet \slash \{\pubEltStar\}$, a set of queries $Q_{\pubEltNoIndex}(\pubEltStar)\subseteq \Field$,
-\item for each $\pubEltNoIndex \in \pubSet$ and any polynomial $P(X)\in \Field[X]$ with degree lower than $\order +1$, a linear reconstruction algorithm that computes 
-$$
-P(\pubEltStar) = \sum_{i=1}^t\lambda_i \cdot \nu_i \enspace ,
-$$
-for coefficients $\lambda_i\in \FField$ and a basis $\{\nu_1,\nu_2,\cdots,\nu_t\}$ for $\Field$ over $\FField$, so that the coefficients $\lambda_i$ are $\FField$-linear combinations of the queries in 
-$$
-\bigcup_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}}\{\myTrace(\gamma\cdot P(\pubEltNoIndex); \gamma \in Q_{\pubEltNoIndex}(\pubEltStar)\} \enspace .
-$$
-\end{itemize}
-\end{definition}
-
-The {\em repair bandwith} $RB$ of a LERS is the maximum number of sub-symbols which must be returned by the nodes to recover $P(\pubEltStar)$. It is defined by:
-$$
-RB = \max_{\pubEltStar \in \pubSet} \sum_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}} \# Q_{\pubEltNoIndex}(\pubEltStar) \enspace .
-$$
-
-One of the main goals of LERS schemes is to minimize the maximum number of bits $RB\times \log_2(\FField)$ required to reconstruct $P(\pubEltStar)$ for any $\pubEltStar\in \pubSet$ and any polynomial $P(X)$. During the last few years, there have been several publications tackling this issue in the context of RS codes (see \eg \cite{DRWS11,SPDC13}), or more generally, for MDS codes (see \eg \cite{CHJL11,DGWWR10,SR10}). Depending on the extension dimension $t$ of $\Field$ over $\FField$, some lower bounds have been given:
-\begin{itemize}
-\item when $t$ is sufficiently large, $RB$ is bounded below by $(t\cdot RL)/(RL-\order)$, where $RL$ denotes the {\em repair locality} and corresponds to the maximum number of $\pubElt \in \pubSet$ that are required to recover $P(\pubEltStar)$ whatever $\pubEltStar \in \pubSet$. For very large values of $t$, several schemes have been proposed for which the lower bound is achieved (see \eg \cite{CHJL11,SR10}).
-\item when $t$ is small, it is clear that the lower bound above cannot be achieved since we have $RB \geqslant \order + t$. It must however be observed that this latter bound is much better than the naive one $t\times (\order + 1)$. \comEP{To continue...}
-\end{itemize}
-\subsection{Explicit Constructions for Reed-Solomon Codes}
-In the recent work \cite{GW16}, the authors show that the construction of a LERS for a Reed-Solomon code $\RS[\pubSet, \order + 1]$ and a subfield $\FField$ of $\Field$
-is equivalent to the finding, for any $\pubEltStar\in \pubSet$, of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$, such that:
-\begin{itemize}
-\item (1) for any $j\in [1:t]$, we have 
-\begin{equation}\label{equ:LERS_1}
-\myTrace(\zeta_j P(\pubEltStar)) = \sum_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}} \myTrace(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar)P(\pubEltNoIndex))
-\end{equation}
-\item and (2) the following equality holds
-\begin{equation}\label{equ:LERS_2}
-P(\pubEltStar) = \sum_{j=1}^t \myTrace(\zeta_j P(\pubEltStar)) \enspace .
-\end{equation}
-\end{itemize}
-The core observation in \cite{GW16} is that, surprisingly, for some $\pubEltNoIndex\in \pubSet$ the size of all the elements required to build the set $\{\myTrace(\zeta_j P(\pubEltNoIndex));j\in [1;t]\}$ may be smaller than $P(\pubEltNoIndex)$. This implies that the total number of bits required to recover $P(\pubEltStar)$ from \eqref{equ:LERS_1} and \eqref{equ:LERS_2} may be smaller than $(\order +1)\log_2(\# \Field)$ (corresponding to a direct polynomial interpolation). Actually, it is shown in \cite{GW16} that the construction of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ minimizing the repair bandwidth is equivalent to the problem of finding some nice polynomials over $\Field$ \cite[Theorem 4]{GW16} and some explicit constructions are proposed. In the specific case of Reed-Solomon codes $\RS[\pubSet, \order + 1]$, the construction of the coefficients $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ leading to some repair bandwidth $RB$ over a subfield $\FField\subseteq \Field$ such that $t=[\Field:\FField]$ can be directly deduced from a set $\polySet\in \Field[X]$ of $t$ polynomials of degree $\nbShares - \order - 1$ so that:
-$$
-\dim_{\FField} (\{p(\pubEltStar): p\in \polySet\}) = t
-$$
-and the sets $\{p(\pubEltNoIndex): p\in \polySet\}$ for $\pubEltNoIndex \neq \pubEltStar$ satisfy:
-$$
-RB \geqslant \sum_{\pubEltNoIndex \in \pubSet \backslash \{\pubEltStar\}} \dim_{\FField} (\{p(\pubEltNoIndex): p\in \polySet\}) \enspace .
-$$
-Once such a family of polynomials $\polySet$ is found the coefficients are built so that
-$$
-\{\zeta_1,\cdots,\zeta_t\} = \{p(\pubEltStar): p\in \polySet\}
-$$
-and for every $j\in [1:t]$ and $\pubEltNoIndex \in \pubSet \backslash \{\pubEltStar\}$;
-$$
-\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar) = p(\pubEltNoIndex)\times \frac{\prod_{\beta\in \pubSet \backslash \{\pubEltStar\}}(\pubEltStar - \beta)}{\prod_{\beta\in \pubSet \backslash \{\pubEltStar\}}(\pubEltNoIndex - \beta)} \enspace .
-$$
-
- 
-\subsection{Example}
- \todo{}
 
 \section{Side-Channel analysis of Shamir's Secret Sharing Scheme}
 \subsection{Higher-order Side-Channel Resistance: Requirements and Limitations}
@@ -297,7 +228,7 @@ We plot in Fig.~\ref{fig_3_shares}, for each possible combination of $3$ shares 
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=1\textwidth]{Figure/res_125_246_119_104_150.png}
+\includegraphics[width=1\textwidth]{Figure/res_125_246_119_104_150.pdf}
 \caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
 \label{fig_3_shares}
 \end{center}
@@ -307,7 +238,7 @@ From Fig.~\ref{fig_3_shares}, we observe that some combinations of $3$-shares pe
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=1\textwidth]{Figure/res_86_23_115_107_189.png}
+\includegraphics[width=1\textwidth]{Figure/res_86_23_115_107_189.pdf}
 \caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
 \label{fig_3_shares_bis}
 \end{center}
@@ -319,7 +250,7 @@ The second investigation we planned to perform is to check if exploiting the lea
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=1\textwidth]{Figure/5_237_zoom.png}
+%\includegraphics[width=1\textwidth]{Figure/5_237_zoom.pdf}
 \caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
 \label{fig_4_shares}
 \end{center}
@@ -329,7 +260,7 @@ From Fig.~\ref{fig_4_shares}, one can identify that for a specific interval of n
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=1\textwidth]{Figure/169_63_zoom.png}
+%\includegraphics[width=1\textwidth]{Figure/169_63_zoom.pdf}
 \caption{Evolution of the number of queries to achieve $100\%$ of success rate according to an increasing noise standard deviation.}
 \label{fig_4_shares_bis}
 \end{center}
@@ -354,7 +285,7 @@ Then, we have acquired $15.000$ traces for the attack phase and we have performe
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=1\textwidth]{Figure/SR.png}
+\includegraphics[width=1\textwidth]{Figure/SR.pdf}
 \caption{Success rate of the template attack according to an increasing number of traces.}
 \label{fig_SR}
 \end{center}
@@ -365,6 +296,88 @@ From Fig.~\ref{fig_SR}, one can see that exploiting the leakage of the shares $(
 
 
 \section{Improvement Proposal of Shamir's Secret Sharing Scheme}
+
+\subsection{Linear Exact Repairing Codes}
+
+A {\em linear code} $\mathcal{C}$ of length $\nbShares$ and dimension $k$ over a finite field $\Field$ is a $k$-dimensional subspace of $\Field^{\nbShares}$. It is denoted by $\mathcal{C}[n,k]$. A particular linear code is the {\em Reed-Solomon Code} whose definition is recalled hereafter.
+
+\begin{definition}[Reed-Solomon Code]
+The Reed-Solomon code $\RS[\pubSet, \order + 1]\subseteq \Field^{\nbShares}$ of dimension $\order + 1$ over a finite field $\Field$ and with evaluation subset $\pubSet = \{\pubElt[1],\pubElt[2],\cdots,\pubElt[\nbShares]\}$ of $\Field$ is the subspace:
+$$\RS[\pubSet,\order + 1] = \{(P(\pubElt[1]),P(\pubElt[2]),\cdots,P(\pubElt[\nbShares])); P(X) \in \Field[X] \text{ and } \deg(P) \leqslant \order\} \enspace .$$
+\end{definition}
+
+Reed-Solomon codes are {\em Maximum Distance Separable} (MDS) codes, which means that any $\order + 1$ symbols (that is, evaluations of a polynomial $P(X)\in \RS[\pubSet,\order+1]$) can be used to recover the entire codeword (that is,
+$P(X)$ itself).
+\vspace{3mm}
+
+Let us assume that a file, consisting of $\order + 1$ blocks, is encoded into $\nbShares$ nodes. {\em Exact Repairing codes} have been originally introduced to recover the contents of an erased node by downloading some information from the remaining nodes. In the language of an $\RS[\pubSet,\order+1]$ code as above, the file is a polynomial $P(X)\in \Field[X]$ with $\deg(P(X)) \leqslant \order$ and each node is associated with an evaluation point $\pubElt \in \pubSet$ and stores $P(\pubElt)$. For an arbitrary $\pubEltStar\in \pubSet$ (corresponding to an erased node), the goal is to recover $P(\pubEltStar)$ given some information from the other nodes. Since the code is MDS, its is straightforward to do it by choosing any subset of $\pubSet$ with cardinality $\order + 1$ and by asking the evaluations $P(\pubElt)$ to the corresponding nodes. This means that, for any $\pubEltStar$, the evaluation $P(\pubEltStar)$ can at least be recovered by asking $\log_2(\Field)$ bits of information (corresponding to $P(\pubElt)$) to $\order +1$ nodes. Linear repairing codes aim to define a repairing scheme such that, for any $\pubEltStar$, the evaluation $P(\pubEltStar)$ can be recovered with strictly less than $(\order + 1)\times \log_2(\Field)$ bits of information, by allowing each node to return any $\FField$-linear function of its content, with $\FField$ being a subfield of $\Field$. The $\FField$-linear functions from $\FField$ to $\Field$ may all be defined from the so-called {\em field trace} of $\Field$ over $\FField$. We recall the definition of the field trace hereafter:
+
+\begin{definition}[Field Trace]
+Let $p$ and $r$ be two integers and let $q=p^r$. Let $\Field=\GF(q^t)$ be a degree-$t$ finite field extension of a $\FField=\GF(q)$. The {\em field trace} $\myTrace$ is defined for every $\beta \in \Field$ as:
+\begin{equation}\label{equ:trace}
+\myTrace(\beta) = \beta + \beta^q + \beta^{q^2} + \cdots + \beta^{q^{t-1}} \enspace .
+\end{equation}
+\end{definition}
+
+In a linear repair scheme, the node corresponding to a public point $\pubElt$ returns zero or more elements of $\FField$ of the form $\myTrace(\gamma P(\pubElt))$ for some field elements $\gamma \in \Field$. A linear exact repair scheme can then be described by the field elements $\gamma$ used by all the nodes, along with a (linear) repair algorithm. A precise definition in the context of Reed-Solomon codes is given below:
+
+\begin{definition}[Linear Exact Repair Scheme (LERS)]\label{def:LERS}
+Let $\pubSet = \{\pubElt[1],\pubElt[2],\cdots,\pubElt[\nbShares]\}$ be an evaluation subset of a finite field $\Field$ and let $\RS[\pubSet, \order + 1]\subseteq \Field^{\nbShares}$ be the corresponding Reed-Solomon code. A {\em linear exact repair scheme} for this code over a subfield $\FField$ of $\Field$ is composed of the following steps:
+\begin{itemize}
+\item for each $\pubEltStar\in \pubSet$, and for each $\pubEltNoIndex\in \pubSet \slash \{\pubEltStar\}$, a set of queries $Q_{\pubEltNoIndex}(\pubEltStar)\subseteq \Field$,
+\item for each $\pubEltNoIndex \in \pubSet$ and any polynomial $P(X)\in \Field[X]$ with degree lower than $\order +1$, a linear reconstruction algorithm that computes 
+$$
+P(\pubEltStar) = \sum_{i=1}^t\lambda_i \cdot \nu_i \enspace ,
+$$
+for coefficients $\lambda_i\in \FField$ and a basis $\{\nu_1,\nu_2,\cdots,\nu_t\}$ for $\Field$ over $\FField$, so that the coefficients $\lambda_i$ are $\FField$-linear combinations of the queries in 
+$$
+\bigcup_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}}\{\myTrace(\gamma\cdot P(\pubEltNoIndex); \gamma \in Q_{\pubEltNoIndex}(\pubEltStar)\} \enspace .
+$$
+\end{itemize}
+\end{definition}
+
+The {\em repair bandwith} $RB$ of a LERS is the maximum number of sub-symbols which must be returned by the nodes to recover $P(\pubEltStar)$. It is defined by:
+$$
+RB = \max_{\pubEltStar \in \pubSet} \sum_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}} \# Q_{\pubEltNoIndex}(\pubEltStar) \enspace .
+$$
+
+One of the main goals of LERS schemes is to minimize the maximum number of bits $RB\times \log_2(\FField)$ required to reconstruct $P(\pubEltStar)$ for any $\pubEltStar\in \pubSet$ and any polynomial $P(X)$. During the last few years, there have been several publications tackling this issue in the context of RS codes (see \eg \cite{DRWS11,SPDC13}), or more generally, for MDS codes (see \eg \cite{CHJL11,DGWWR10,SR10}). Depending on the extension dimension $t$ of $\Field$ over $\FField$, some lower bounds have been given:
+\begin{itemize}
+\item when $t$ is sufficiently large, $RB$ is bounded below by $(t\cdot RL)/(RL-\order)$, where $RL$ denotes the {\em repair locality} and corresponds to the maximum number of $\pubElt \in \pubSet$ that are required to recover $P(\pubEltStar)$ whatever $\pubEltStar \in \pubSet$. For very large values of $t$, several schemes have been proposed for which the lower bound is achieved (see \eg \cite{CHJL11,SR10}).
+\item when $t$ is small, it is clear that the lower bound above cannot be achieved since we have $RB \geqslant \order + t$. It must however be observed that this latter bound is much better than the naive one $t\times (\order + 1)$. \comEP{To continue...}
+\end{itemize}
+\subsection{Explicit Constructions for Reed-Solomon Codes}
+In the recent work \cite{GW16}, the authors show that the construction of a LERS for a Reed-Solomon code $\RS[\pubSet, \order + 1]$ and a subfield $\FField$ of $\Field$
+is equivalent to the finding, for any $\pubEltStar\in \pubSet$, of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$, such that:
+\begin{itemize}
+\item (1) for any $j\in [1:t]$, we have 
+\begin{equation}\label{equ:LERS_1}
+\myTrace(\zeta_j P(\pubEltStar)) = \sum_{\pubEltNoIndex \in \pubSet \slash \{\pubEltStar\}} \myTrace(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar)P(\pubEltNoIndex))
+\end{equation}
+\item and (2) the following equality holds
+\begin{equation}\label{equ:LERS_2}
+P(\pubEltStar) = \sum_{j=1}^t \myTrace(\zeta_j P(\pubEltStar)) \enspace .
+\end{equation}
+\end{itemize}
+The core observation in \cite{GW16} is that, surprisingly, for some $\pubEltNoIndex\in \pubSet$ the size of all the elements required to build the set $\{\myTrace(\zeta_j P(\pubEltNoIndex));j\in [1;t]\}$ may be smaller than $P(\pubEltNoIndex)$. This implies that the total number of bits required to recover $P(\pubEltStar)$ from \eqref{equ:LERS_1} and \eqref{equ:LERS_2} may be smaller than $(\order +1)\log_2(\# \Field)$ (corresponding to a direct polynomial interpolation). Actually, it is shown in \cite{GW16} that the construction of field elements $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ minimizing the repair bandwidth is equivalent to the problem of finding some nice polynomials over $\Field$ \cite[Theorem 4]{GW16} and some explicit constructions are proposed. In the specific case of Reed-Solomon codes $\RS[\pubSet, \order + 1]$, the construction of the coefficients $(\zeta_j)_{j\leqslant t}$ and $(\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar))_{j\leqslant t,,\pubEltNoIndex \in \pubSet}$ leading to some repair bandwidth $RB$ over a subfield $\FField\subseteq \Field$ such that $t=[\Field:\FField]$ can be directly deduced from a set $\polySet\in \Field[X]$ of $t$ polynomials of degree $\nbShares - \order - 1$ so that:
+$$
+\dim_{\FField} (\{p(\pubEltStar): p\in \polySet\}) = t
+$$
+and the sets $\{p(\pubEltNoIndex): p\in \polySet\}$ for $\pubEltNoIndex \neq \pubEltStar$ satisfy:
+$$
+RB \geqslant \sum_{\pubEltNoIndex \in \pubSet \backslash \{\pubEltStar\}} \dim_{\FField} (\{p(\pubEltNoIndex): p\in \polySet\}) \enspace .
+$$
+Once such a family of polynomials $\polySet$ is found the coefficients are built so that
+$$
+\{\zeta_1,\cdots,\zeta_t\} = \{p(\pubEltStar): p\in \polySet\}
+$$
+and for every $j\in [1:t]$ and $\pubEltNoIndex \in \pubSet \backslash \{\pubEltStar\}$;
+$$
+\mu_{\pubEltNoIndex,\zeta_j}(\pubEltStar) = p(\pubEltNoIndex)\times \frac{\prod_{\beta\in \pubSet \backslash \{\pubEltStar\}}(\pubEltStar - \beta)}{\prod_{\beta\in \pubSet \backslash \{\pubEltStar\}}(\pubEltNoIndex - \beta)} \enspace .
+$$
+
+ 
+\subsection{Example}
  \todo{}
 
 
